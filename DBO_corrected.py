@@ -1,5 +1,7 @@
 """
-the version of DBO with changed variables' names, 2024/9/12
+A version of DBO with changed variables' names to achieve a better understanding,
+and corrected code to achieve right optimization results (when from matlab to python)
+date: 2024/9/24
 """
 
 import numpy as np
@@ -10,7 +12,6 @@ import copy
 
 def Parameters(F):
     if F=='F1':
-        
         fobj = F1 # ParaValue=[-100,100,30] [-100,100]代表初始范围，30代表dim维度
         lb=-100
         ub=100
@@ -319,14 +320,14 @@ def Initialize(pop, dim, c, d):
 '''边界检查'''
 def BoundaryCheck(input, lb, ub):
     temp = input
-    # method 1  np.random.seed(2) => F1, seed(2), gfit = 8.092168965584682e-11
+    # method 1  np.random.seed(2) => F1, seed(2), gfit = 8.272460116256747e-17
     for i in range(len(input)):
         if temp[i] < lb[i]:
             temp[i] = lb[i]
         elif temp[i] > ub[i]:
             temp[i] = ub[i]
-    # Q 为什么这两种范围检查方式会导致输出结果有差别? 并且下面这种方式导致的结果很差
-    # method 2  np.random.seed(2) => F1, seed(2), gfit = 0.04881476681090107
+    # Q 为什么这两种范围检查方式会导致输出结果有差别? 
+    # method 2  np.random.seed(2) => F1, seed(2), gfit = 1.8756880547419057e-14
     # temp = np.clip(temp, lb, ub)
 
     return temp
@@ -345,19 +346,22 @@ def DBO(p_percent, pop, dim, max_iter, c, d, fun):
     pNum = round(pop*p_percent)
     record_gfitness = []
     X, lb, ub, pfitness = Initialize(pop, dim, c, d)
-    X_now = copy.copy(X)  # atten python中，非常不建议直接将一个变量赋值给另一个变量!!! 一般使用copy.copy()!!!
+    X_now = copy.copy(X)  # attention: python中，非常不建议直接将一个变量赋值给另一个变量!!! 一般使用copy.copy()!!!
     X_last = copy.copy(X_now)
+    # X_now = X
+    # X_last = X_now
 
     for i in range(pop):
         pfitness[i] = fun(X_now[i])
-    pfitness_now = copy.copy(pfitness) 
+    pfitness_now = copy.copy(pfitness)
+    # pfitness_now = pfitness
     gfitness = np.min(pfitness)
     gbest = X_now[pfitness.argmin()]
 
     record_gfitness.append(gfitness)
 
-    for t in range(max_iter):  # 实际上，循环中的X和pfitness，都指代X_new和pfitness_new
-
+    for t in range(max_iter):  # 实际上，循环中的X和pfitness，指代X_new和pfitness_new
+	    
         gworst = X_now[pfitness_now.argmax()]
         # 滚球、跳舞
         r2 = np.random.rand(1)
@@ -413,14 +417,10 @@ def DBO(p_percent, pop, dim, max_iter, c, d, fun):
             if pfitness[i] < pfitness_now[i]:
                 pfitness_now[i] = pfitness[i]
                 X_now[i] = X[i]  # X_now 其实就相当于PSO中的pbest
-     
         if np.min(pfitness_now) < gfitness:  # 群体 
             gfitness = np.min(pfitness_now) 
             gbest = X_now[pfitness_now.argmin()]
-
-        # gfitness = np.min([gfitness, np.min(pfitness_now)])# np.min()得到的是一个numpy.float64，而且np.min()所比较的对象必须在一个np.array或者list里面
-        # gbest = X_now[pfitness_now.argmin()]
-        
+		
         record_gfitness.append(gfitness)
 
     return gfitness, gbest, record_gfitness
@@ -429,20 +429,20 @@ def DBO(p_percent, pop, dim, max_iter, c, d, fun):
 def main(argv):
     SearchAgents=30
     p_percent = 0.2
-    Function_name='F2'
+    Function_name='F1'
     Max_iteration=100
 
     fobj,lb,ub,dim=Parameters(Function_name)
     fMin,bestX,DBO_curve=DBO(p_percent, SearchAgents, dim, Max_iteration, lb, ub, fobj)
 
     print(f'目标函数：{Function_name}, 最优值为：{fMin}')
-    # print(['最优变量为：',bestX])
+    print(['最优变量为：',bestX])
     plt.plot(DBO_curve)
     plt.xlabel('iteration')
     plt.ylabel('object value')
     plt.title(Function_name)
  
-    # plt.show()
+    plt.show()
 
 if __name__=='__main__':
 	main(sys.argv)
