@@ -1,5 +1,5 @@
 """
-A version of DBO with changed variables' names to achieve a better understanding,
+A version of Dung Beetle Optimizer (DBO) with changed variables' names to achieve a better understanding,
 and corrected code to achieve right optimization results (when from matlab to python)
 date: 2024/9/24
 """
